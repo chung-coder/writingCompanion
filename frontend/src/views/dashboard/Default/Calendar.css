@@ -1,0 +1,15 @@
+.MuiPickersDay-root {
+  background-color: #F3F4F6;
+  border-radius: 5%;
+  margin-left: 5px;
+}
+.css-flbe84-MuiDayCalendar-weekContainer {
+  margin-bottom: 10px;
+}
+.css-1n61gaa-MuiTypography-root-MuiDayCalendar-weekDayLabel {
+  margin: 0 5px;
+}
+
+.css-q3a13a-MuiButtonBase-root-MuiPickersDay-root:not(.Mui-selected) {
+  border: 2px solid #EF9A9A;
+}
