@@ -10,6 +10,6 @@ Writing Companion is an AI-powered writing practice platform designed specifical
 5. 個人資料
 
 ## Tech Stack
-Frontend: React.js
-Backend: Django
-Database: MySQL
+- Frontend: React.js
+- Backend: Django
+- Database: MySQL
