@@ -70,6 +70,8 @@ const Calendar = () => {
     if (value) {
       const startOfWeek = value.startOf('week').format('YYYY-MM-DD');
       const endOfWeek = value.endOf('week').format('YYYY-MM-DD');
+      console.log(startOfWeek);
+      console.log(endOfWeek);
     }
   }, [value]);
 

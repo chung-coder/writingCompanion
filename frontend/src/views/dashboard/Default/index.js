@@ -16,6 +16,7 @@ const Dashboard = ({ start_date, end_date }) => {
   const api = 'http://localhost:8000/api/';
   const token =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI2MTUxOTU3LCJpYXQiOjE3MjM1NTk5NTcsImp0aSI6IjQ0OTAzYTc1OTU1YzRlYzdiNWVmMGU0YzVjMDc0MzI5IiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJhZG1pbiJ9.Az67tkxL0qnmUdloW4nOjKFx8Wq3UbQv51rVrd6w1rI';
+
   useEffect(() => {
     const instance = axios.create({
       baseURL: api,
@@ -30,7 +31,7 @@ const Dashboard = ({ start_date, end_date }) => {
       .catch((error) => {
         console.log(error);
       });
-  }, []);
+  }, [start_date]);
   return (
     <Grid container spacing={gridSpacing}>
       <Grid item xs={12}>
