@@ -62,7 +62,7 @@ function Day(props) {
   );
 }
 
-const Calendar = () => {
+const Calendar = ({ onData }) => {
   const [hoveredDay, setHoveredDay] = useState(null);
   const [value, setValue] = useState(dayjs(new Date()));
 
@@ -70,8 +70,8 @@ const Calendar = () => {
     if (value) {
       const startOfWeek = value.startOf('week').format('YYYY-MM-DD');
       const endOfWeek = value.endOf('week').format('YYYY-MM-DD');
+      onData(startOfWeek, endOfWeek);
       console.log(startOfWeek);
-      console.log(endOfWeek);
     }
   }, [value]);
 
