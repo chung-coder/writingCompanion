@@ -71,7 +71,6 @@ const Calendar = ({ onData }) => {
       const startOfWeek = value.startOf('week').format('YYYY-MM-DD');
       const endOfWeek = value.endOf('week').format('YYYY-MM-DD');
       onData(startOfWeek, endOfWeek);
-      console.log(startOfWeek);
     }
   }, [value]);
 

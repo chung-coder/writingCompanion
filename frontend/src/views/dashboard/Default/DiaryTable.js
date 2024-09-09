@@ -54,7 +54,7 @@ function DiaryTable({ favoriteDiary }) {
                 );
               })
             ) : (
-              <h1>Loading...</h1>
+              <h1>尚未有收藏日記...</h1>
             )}
           </TableBody>
         </Table>
