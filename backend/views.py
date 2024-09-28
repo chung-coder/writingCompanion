@@ -7,8 +7,11 @@ from django.http import HttpResponse, JsonResponse
 
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Count, Case, When, IntegerField
+from django.db.models import Count, Case, When, IntegerField, Sum
 from django.contrib.auth.models import User
+
+from datetime import datetime
+from django.db.models import Sum
 
 from .serializers import (
     MyTokenObtainPairSerializer,
@@ -205,6 +208,32 @@ class ListFavoriteDiaryView(generics.ListAPIView):
         return Diary.objects.filter(student_id=student_id).filter(is_favorite=True)
 
 
+class WordCountStatistics(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        user_id = request.user.id
+        student_id = Student.objects.filter(user_id=user_id).values()[0]["id"]
+        year = request.query_params.get("year", datetime.now().year)
+        word_count_data = (
+            Diary.objects.filter(date__year=year)
+            .values("date__month")
+            .annotate(total_word_count=Sum("word_count"))
+            .order_by("date__month")
+        )
+
+        result = {
+            month["date__month"]: month["total_word_count"] for month in word_count_data
+        }
+
+        # Add missing months with a count of 0
+        for i in range(1, 13):
+            if i not in result:
+                result[i] = 0
+
+        return Response({"year": year, "word_count_statistics": result})
+
+
 class CountInteractionView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -275,15 +304,19 @@ class ListWeeklyDiaryView(generics.ListAPIView):
 
 
 class UpdateProfileView(generics.UpdateAPIView):
-    queryset = User.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = UpdateUserSerializer
 
+    def get_object(self):
+        return self.request.user
+
 
 class ChangePasswordView(generics.UpdateAPIView):
-    queryset = User.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = ChangePasswordSerializer
+
+    def get_object(self):
+        return self.request.user
 
 
 class MyObtainTokenPairView(TokenObtainPairView):

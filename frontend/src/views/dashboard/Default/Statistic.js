@@ -18,10 +18,6 @@ import TotalGrowthBarChart from './TotalGrowthBarChart';
 // ==============================|| DEFAULT DASHBOARD ||============================== //
 const Statistic = () => {
   const theme = useTheme();
-  const [isLoading, setLoading] = useState(true);
-  useEffect(() => {
-    setLoading(false);
-  }, []);
   const [diaryType, setDiaryType] = useState({});
   const [totalDiary, setTotalDiary] = useState(0);
   const [ratioDiary, setRatioDiary] = useState(0);
@@ -30,7 +26,7 @@ const Statistic = () => {
   const [favoriteDiary, setFavoriteDiary] = useState([]);
   const api = 'http://localhost:8000/api/';
   const token =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI2MTUxOTU3LCJpYXQiOjE3MjM1NTk5NTcsImp0aSI6IjQ0OTAzYTc1OTU1YzRlYzdiNWVmMGU0YzVjMDc0MzI5IiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJhZG1pbiJ9.Az67tkxL0qnmUdloW4nOjKFx8Wq3UbQv51rVrd6w1rI';
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI4OTkzOTQ0LCJpYXQiOjE3MjY0MDE5NDQsImp0aSI6IjkzZTFmNjBlY2FjZjRmY2JhMTdlOWI1MDc2ZWEzNzhmIiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJhZG1pbiJ9.cKjXkDwIW4QpETYMUdFDH1IZ2RLirHLidICw72G1MDU';
 
   useEffect(() => {
     const instance = axios.create({
@@ -81,7 +77,7 @@ const Statistic = () => {
             />
           </Grid>
           <Grid item xs={12} md={12}>
-            <TotalGrowthBarChart isLoading={isLoading} />
+            <TotalGrowthBarChart />
           </Grid>
         </Grid>
       </Grid>

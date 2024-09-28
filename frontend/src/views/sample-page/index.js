@@ -13,19 +13,59 @@ import burceMars from 'assets/images/bruce-mars.jpg';
 
 function SamplePage() {
   const [student_info, setStudentInfo] = useState({});
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
-  const api = 'http://localhost:8000/api/';
+  const api = 'http://localhost:8000/';
   const token =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI2MTUxOTU3LCJpYXQiOjE3MjM1NTk5NTcsImp0aSI6IjQ0OTAzYTc1OTU1YzRlYzdiNWVmMGU0YzVjMDc0MzI5IiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJhZG1pbiJ9.Az67tkxL0qnmUdloW4nOjKFx8Wq3UbQv51rVrd6w1rI';
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI4OTkzOTQ0LCJpYXQiOjE3MjY0MDE5NDQsImp0aSI6IjkzZTFmNjBlY2FjZjRmY2JhMTdlOWI1MDc2ZWEzNzhmIiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJhZG1pbiJ9.cKjXkDwIW4QpETYMUdFDH1IZ2RLirHLidICw72G1MDU';
+  const instance = axios.create({
+    baseURL: api,
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  const handleOldPassword = (value) => {
+    setOldPassword(value);
+  };
+  const handleNewPassword = (value) => {
+    setNewPassword(value);
+  };
+  const handleConfirmPassword = (value) => {
+    setConfirmPassword(value);
+  };
+
+  const handleUpdate = async () => {
+    if (newPassword !== confirmPassword) {
+      alert('密碼不一致');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('old_password', oldPassword);
+    formData.append('password', newPassword);
+    formData.append('password2', confirmPassword);
+    await instance
+      .put('/change_password/', formData)
+      .then(() => {
+        alert('密碼已更新成功');
+      })
+      .catch((error) => {
+        const messages = error.response.data.password;
+
+        if (!messages) {
+          alert('輸入的舊密碼錯誤');
+          return;
+        }
+        const messageString = messages.join('\n');
+
+        alert(messageString);
+      });
+  };
 
   useEffect(() => {
-    const instance = axios.create({
-      baseURL: api,
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
     instance
-      .get('/student_info/')
+      .get('/api/student_info/')
       .then((response) => {
         setStudentInfo(response.data);
       })
@@ -33,6 +73,7 @@ function SamplePage() {
         console.log(error);
       });
   }, []);
+
   return (
     <Grid>
       <div style={{ position: 'relative', marginBottom: 80 }}>
@@ -121,6 +162,7 @@ function SamplePage() {
               </Grid>
               <Grid item>
                 <FormControl
+                  disabled
                   sx={{
                     width: '100%',
                     marginBottom: '2%',
@@ -135,18 +177,27 @@ function SamplePage() {
                 </FormControl>
               </Grid>
               <Grid item>
-                <PasswordInput name="輸入舊密碼" />
+                <PasswordInput id="oldPassword" onPasswordChange={handleOldPassword} name="輸入舊密碼" />
               </Grid>
               <Grid item>
-                <PasswordInput name="輸入新密碼" />
+                <PasswordInput id="newPassword" onPasswordChange={handleNewPassword} name="輸入新密碼" />
               </Grid>
               <Grid item>
-                <PasswordInput name="新密碼確認" />
+                <PasswordInput id="confirmPassword" onPasswordChange={handleConfirmPassword} name="新密碼確認" />
               </Grid>
             </Grid>
             <Box sx={{ mt: 2 }}>
               <AnimateButton>
-                <Button disableElevation fullWidth borderRadius="8" size="medium" type="submit" variant="contained" color="primary">
+                <Button
+                  disableElevation
+                  fullWidth
+                  size="medium"
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  onClick={handleUpdate}
+                  sx={{ borderRadius: 2 }}
+                >
                   確認修改
                 </Button>
               </AnimateButton>

@@ -3,11 +3,16 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { FilledInput, FormControl, IconButton, InputAdornment, InputLabel } from '@mui/material';
 import { useState } from 'react';
 
-const PasswordInput = (props, { password, handlePassword }) => {
+const PasswordInput = (props) => {
   const [showPassword, setShowPassword] = useState(false);
-
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+
+    props.onPasswordChange(value);
   };
 
   return (
@@ -26,12 +31,11 @@ const PasswordInput = (props, { password, handlePassword }) => {
         {props.name}
       </InputLabel>
       <FilledInput
-        id="outlined-adornment-password-register"
+        id={props.id}
         type={showPassword ? 'text' : 'password'}
-        value={password}
-        name="password"
-        label="Password"
-        onChange={handlePassword}
+        name={props.id}
+        label={props.value}
+        onChange={handleInputChange}
         endAdornment={
           <InputAdornment position="end">
             <IconButton aria-label="toggle password visibility" onClick={handleClickShowPassword} edge="end" size="large">
@@ -42,24 +46,6 @@ const PasswordInput = (props, { password, handlePassword }) => {
         inputProps={{}}
       />
     </FormControl>
-    // <TextField
-    //   variant="outlined"
-    //   size="small"
-    //   type={showPassword ? 'text' : 'password'}
-    //   value={password}
-    //   onChange={handlePassword}
-    //   required={true}
-    //   InputProps={{
-    //     endAdornment: (
-    //       <InputAdornment position="end">
-    //         <IconButton aria-label="toggle password visibility" onClick={handleClickShowPassword} edge="end">
-    //           {showPassword ? <VisibilityOff /> : <Visibility />}
-    //         </IconButton>
-    //       </InputAdornment>
-    //     )
-    //   }}
-    //   fullWidth
-    // />
   );
 };
 

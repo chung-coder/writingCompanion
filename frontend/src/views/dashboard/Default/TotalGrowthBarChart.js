@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -27,8 +29,10 @@ const status = [
 
 // ==============================|| DASHBOARD DEFAULT - TOTAL GROWTH BAR CHART ||============================== //
 
-const TotalGrowthBarChart = ({ isLoading }) => {
+const TotalGrowthBarChart = () => {
   const [value, setValue] = useState('year');
+  const [isLoading, setIsLoading] = useState(false);
+
   const theme = useTheme();
   const customization = useSelector((state) => state.customization);
 
@@ -42,43 +46,63 @@ const TotalGrowthBarChart = ({ isLoading }) => {
   const primaryDark = theme.palette.primary.dark;
   const secondaryMain = theme.palette.secondary.main;
   const secondaryLight = theme.palette.secondary.light;
+  const api = 'http://localhost:8000/api/';
+  const token =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI4OTkzOTQ0LCJpYXQiOjE3MjY0MDE5NDQsImp0aSI6IjkzZTFmNjBlY2FjZjRmY2JhMTdlOWI1MDc2ZWEzNzhmIiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJhZG1pbiJ9.cKjXkDwIW4QpETYMUdFDH1IZ2RLirHLidICw72G1MDU';
 
   useEffect(() => {
-    const newChartData = {
-      ...chartData.options,
-      colors: [primaryMain],
-      xaxis: {
-        labels: {
-          style: {
-            colors: [primary, primary, primary, primary, primary, primary, primary, primary, primary, primary, primary, primary]
-          }
-        }
-      },
-      yaxis: {
-        labels: {
-          style: {
-            colors: [primary]
-          }
-        }
-      },
-      grid: {
-        borderColor: grey200
-      },
-      tooltip: {
-        theme: 'light'
-      },
-      legend: {
-        labels: {
-          colors: grey500
-        }
-      }
-    };
+    const instance = axios.create({
+      baseURL: api,
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    instance
+      .get('/word-count-statistics/')
+      .then((response) => {
+        const wordCountStatistics = Object.values(response.data.word_count_statistics);
 
-    // do not load chart when loading
-    if (!isLoading) {
-      ApexCharts.exec(`bar-chart`, 'updateOptions', newChartData);
-    }
-  }, [navType, primaryMain, primaryDark, secondaryMain, secondaryLight, primary, darkLight, grey200, isLoading, grey500]);
+        const newChartData = {
+          ...chartData.options,
+          series: [
+            {
+              name: '總字數',
+              data: wordCountStatistics
+            }
+          ],
+          colors: [primaryMain],
+          xaxis: {
+            labels: {
+              style: {
+                colors: [primary, primary, primary, primary, primary, primary, primary, primary, primary, primary, primary, primary]
+              }
+            }
+          },
+          yaxis: {
+            labels: {
+              style: {
+                colors: [primary]
+              }
+            }
+          },
+          grid: {
+            borderColor: grey200
+          },
+          tooltip: {
+            theme: 'light'
+          },
+          legend: {
+            labels: {
+              colors: grey500
+            }
+          }
+        };
+        ApexCharts.exec(`bar-chart`, 'updateOptions', newChartData);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching word count statistics:', error);
+        setIsLoading(false);
+      });
+  }, [navType, primaryMain, primaryDark, secondaryMain, secondaryLight, primary, darkLight, grey200, grey500]);
 
   return (
     <>

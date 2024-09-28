@@ -17,7 +17,7 @@ const BasicTable = ({ startOfWeek, endOfWeek }) => {
   const start = dayjs(startOfWeek);
   const api = 'http://localhost:8000/api/';
   const token =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI4NDc5NTc0LCJpYXQiOjE3MjU4ODc1NzQsImp0aSI6Ijg5MTllMGRjYzNhNzRiZTdiYzEyZTc0Y2QwMzFlNjU3IiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJhZG1pbiJ9.DtAVnr-7DG9SpSEYYfyN4SokKvHtD_vffIdHYpeDdQY';
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI4OTkzOTQ0LCJpYXQiOjE3MjY0MDE5NDQsImp0aSI6IjkzZTFmNjBlY2FjZjRmY2JhMTdlOWI1MDc2ZWEzNzhmIiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJhZG1pbiJ9.cKjXkDwIW4QpETYMUdFDH1IZ2RLirHLidICw72G1MDU';
 
   useEffect(() => {
     const newRows = [];

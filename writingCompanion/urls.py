@@ -23,12 +23,12 @@ urlpatterns = [
     path("login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("register/", views.RegisterView.as_view(), name="auth_register"),
     path(
-        "change_password/<int:pk>/",
+        "api/change_password/",
         views.ChangePasswordView.as_view(),
         name="auth_change_password",
     ),
     path(
-        "update_profile/<int:pk>/",
+        "api/update_profile/",
         views.UpdateProfileView.as_view(),
         name="auth_update_profile",
     ),
@@ -48,6 +48,11 @@ urlpatterns = [
         views.ListStudentInfoView.as_view(),
         name="get_student_info",
     ),
-    path("assistance/", views.GptAssistanceView, name="gpt_assistance"),
-    path("interaction/", views.GptInteractioneView, name="gpt_interaction"),
+    path(
+        "api/word-count-statistics/",
+        views.WordCountStatistics.as_view(),
+        name="word-count-statistics",
+    ),
+    path("api/assistance/", views.GptAssistanceView, name="gpt_assistance"),
+    path("api/interaction/", views.GptInteractioneView, name="gpt_interaction"),
 ]
