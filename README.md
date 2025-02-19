@@ -51,7 +51,7 @@ Ensure you have the following installed on your system:
 1. **Clone the repository**
 
    ```sh
-   git clone https://github.com/your-username/writing-companion.git
+   git clone https://github.com/chung-coder/writingCompanion.git
    cd writing-companion
    ```
 
@@ -95,7 +95,7 @@ Ensure you have the following installed on your system:
 
 ## ⭐ Help us improve the project better
 
-- Please discuss your concerns with me on [LinkedIn](https://app.heptabase.com/f552a358-7674-4e4d-abf0-e855cccad665/card/87a8329e-309e-44c4-a40a-3603966f8928) before creating a new issue. 😉
+- Please discuss your concerns with me on [LinkedIn](https://www.linkedin.com/in/tingchen-yen) before creating a new issue. 😉
 
 - Please STAR⭐️ the repository if you like the content and code 😁
 
