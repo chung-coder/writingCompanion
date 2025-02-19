@@ -72,7 +72,6 @@ Ensure you have the following installed on your system:
 2. **Backend Setup**
 
    ```sh
-   cd backend
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    pip install -r requirements.txt
