@@ -6,6 +6,15 @@
 
 Writing Companion is an AI-powered writing practice platform designed specifically for elementary school students. It provides interactive features to enhance students' writing skills through guided exercises, analytics, and personalized feedback.
 
+## Contents
+- [Features](#features)
+- [Tech Stack](#techstack)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Help us improve the project better](#contribute)
+- [License](#license)
+
+<a id="features"></a>
 ## ⚙️ Features
 
 - **Calendar-Based Journal**: Helps students organize and review their past entries.
@@ -26,7 +35,9 @@ Writing Companion is an AI-powered writing practice platform designed specifical
 | ![image1](doc/images/1.jpg) | ![image2](doc/images/2.jpg) |
 | ![image3](doc/images/3.jpg) | ![image4](doc/images/4.jpg) |
 | ![image5](doc/images/5.jpg) | ![image6](doc/images/6.jpg) |
-## Tech Stack
+
+<a id="techstack"></a>
+## 📚 Tech Stack
 
 - **Frontend**: React.js
 
@@ -34,6 +45,7 @@ Writing Companion is an AI-powered writing practice platform designed specifical
 
 - **Database**: MySQL
 
+<a id="getting-started"></a>
 ## 📦 Getting Started
 
 ### Prerequisites
@@ -45,6 +57,8 @@ Ensure you have the following installed on your system:
 - Python & pip
 
 - MySQL
+
+- OpenAI API Key
 
 ### Setup Instructions
 
@@ -85,7 +99,8 @@ Ensure you have the following installed on your system:
       python manage.py migrate
       ```
 
-## Usage
+<a id="usage"></a>
+## 🔧 Usage
 
 1. Access the frontend via `http://localhost:3000`
 
@@ -93,12 +108,13 @@ Ensure you have the following installed on your system:
 
 3. Monitor progress through the dashboard
 
+<a id="contribute"></a>
 ## ⭐ Help us improve the project better
 
 - Please discuss your concerns with me on [LinkedIn](https://www.linkedin.com/in/tingchen-yen) before creating a new issue. 😉
 
 - Please STAR⭐️ the repository if you like the content and code 😁
 
-## License
-
+<a id="license"></a>
+## 📋 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
