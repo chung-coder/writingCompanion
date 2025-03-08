@@ -1,1 +1,9 @@
 .env
+
+# Django
+backend/migrations/
+backend/__pycache__/
+writingCompanion/__pycache__/
+
+# Virtual Environment
+backend/venv/
