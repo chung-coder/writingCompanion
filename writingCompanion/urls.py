@@ -6,53 +6,81 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from backend import views
+# 認證相關
+from backend.views.auth import (
+    MyObtainTokenPairView,
+    RegisterView,
+    ChangePasswordView,
+    UpdateProfileView
+)
+
+# 日記相關
+from backend.views.diary import (
+    DiaryViewSet,
+    ListWeeklyDiaryView
+)
+
+# GPT 相關
+from backend.views.genAI import (
+    GptinteractionViewSet,
+    GptassistanceViewSet,
+    GptInteractionView,
+    GptAssistanceView
+)
+
+# 學生相關
+from backend.views.student import (
+    ListStudentInfoView,
+    StudentViewSet
+)
+
+# 班級相關
+from backend.views.class_management import ClassViewSet
+
+# 教師相關
+from backend.views.teacher import TeacherViewSet
+
+# 統計相關
+from backend.views.statistics import (
+    WordCountStatistics,
+    CountInteractionView,
+    ListFavoriteDiaryView
+)
 
 router = routers.DefaultRouter()
-router.register(r"students", views.StudentViewSet)
-router.register(r"teachers", views.TeacherViewSet)
-router.register(r"class", views.ClassViewSet)
-router.register(r"diary", views.DiaryViewSet)
-router.register(r"gpt-assistance", views.GptassistanceViewSet)
-router.register(r"gpt-interaction", views.GptinteractionViewSet)
+router.register(r"students", StudentViewSet)
+router.register(r"teachers", TeacherViewSet)
+router.register(r"classes", ClassViewSet)
+router.register(r"diaries", DiaryViewSet)
+router.register(r"gpt-assistance", GptassistanceViewSet)
+router.register(r"gpt-interaction", GptinteractionViewSet)
 
 urlpatterns = [
+    # Admin
     path("admin/", admin.site.urls),
+    
+    # API 根路徑
     path("api/", include(router.urls)),
-    path("login/", views.MyObtainTokenPairView.as_view(), name="token_obtain_pair"),
-    path("login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("register/", views.RegisterView.as_view(), name="auth_register"),
-    path(
-        "api/change_password/",
-        views.ChangePasswordView.as_view(),
-        name="auth_change_password",
-    ),
-    path(
-        "api/update_profile/",
-        views.UpdateProfileView.as_view(),
-        name="auth_update_profile",
-    ),
-    path("api/weekly_diary/", views.ListWeeklyDiaryView.as_view(), name="list_diary"),
-    path(
-        "api/count_diaryType/",
-        views.CountInteractionView.as_view(),
-        name="count_interaction",
-    ),
-    path(
-        "api/favorite_diary/",
-        views.ListFavoriteDiaryView.as_view(),
-        name="favorite_diary",
-    ),
-    path(
-        "api/student_info/",
-        views.ListStudentInfoView.as_view(),
-        name="get_student_info",
-    ),
-    path(
-        "api/word-count-statistics/",
-        views.WordCountStatistics.as_view(),
-        name="word-count-statistics",
-    ),
-    path("api/assistance/", views.GptAssistanceView, name="gpt_assistance"),
-    path("api/interaction/", views.GptInteractioneView, name="gpt_interaction"),
+    
+    # 認證相關
+    path("api/login/", MyObtainTokenPairView.as_view(), name="token_obtain_pair"),
+    path("api/login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/register/", RegisterView.as_view(), name="auth_register"),
+    path("api/change-password/", ChangePasswordView.as_view(), name="auth_change_password"),
+    path("api/update-profile/", UpdateProfileView.as_view(), name="auth_update_profile"),
+    
+    # 學生相關
+    path("api/student-info/", ListStudentInfoView.as_view(), name="student_info"),
+    
+    # 日記相關
+    path("api/weekly-diaries/", ListWeeklyDiaryView.as_view(), name="weekly_diaries"),
+    path("api/favorite-diaries/", ListFavoriteDiaryView.as_view(), name="favorite_diaries"),
+    
+    # GPT 相關
+    path("api/gpt/interact/", GptInteractionView, name="gpt_interaction"),
+    path("api/gpt/assist/", GptAssistanceView, name="gpt_assistance"),
+    
+    # 統計相關
+    path("api/statistics/word-count/", WordCountStatistics.as_view(), name="word_count_statistics"),
+    path("api/statistics/interaction/", CountInteractionView.as_view(), name="interaction_statistics"),
 ]
