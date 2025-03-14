@@ -7,3 +7,5 @@ writingCompanion/__pycache__/
 
 # Virtual Environment
 backend/venv/
+.DS_Store
+frontend/package-lock.json
