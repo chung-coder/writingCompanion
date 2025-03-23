@@ -2,6 +2,8 @@
 
 # Django
 backend/migrations/
+# Python cache files
+backend/views/__pycache__/
 backend/__pycache__/
 writingCompanion/__pycache__/
 
