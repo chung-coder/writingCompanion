@@ -11,7 +11,8 @@ from backend.views.auth import (
     MyObtainTokenPairView,
     RegisterView,
     ChangePasswordView,
-    UpdateProfileView
+    UpdateProfileView,
+    LogoutView
 )
 
 # 日記相關
@@ -65,6 +66,7 @@ urlpatterns = [
     # 認證相關
     path("api/login/", MyObtainTokenPairView.as_view(), name="token_obtain_pair"),
     path("api/login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/logout/", LogoutView.as_view(), name="logout"),
     path("api/register/", RegisterView.as_view(), name="auth_register"),
     path("api/change-password/", ChangePasswordView.as_view(), name="auth_change_password"),
     path("api/update-profile/", UpdateProfileView.as_view(), name="auth_update_profile"),

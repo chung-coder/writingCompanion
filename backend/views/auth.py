@@ -2,6 +2,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from ..serializers import (
     MyTokenObtainPairSerializer,
@@ -11,7 +12,7 @@ from ..serializers import (
 )
 
 class AuthBaseView:
-    """認證相關視圖的基礎類"""
+    """Base class for authentication related views"""
     
     @staticmethod
     def get_error_response(message, status_code=status.HTTP_400_BAD_REQUEST):
@@ -22,18 +23,18 @@ class AuthBaseView:
 
 class MyObtainTokenPairView(TokenObtainPairView):
     """
-    登入視圖
+    Login View
     
-    返回 JWT token pair (access token 和 refresh token)
+    Returns JWT token pair (access token and refresh token)
     """
     permission_classes = (AllowAny,)
     serializer_class = MyTokenObtainPairSerializer
 
 class RegisterView(AuthBaseView, generics.CreateAPIView):
     """
-    註冊視圖
+    Registration View
     
-    允許新用戶註冊，需提供：
+    Allows new users to register with:
     - username
     - password
     - email
@@ -52,19 +53,19 @@ class RegisterView(AuthBaseView, generics.CreateAPIView):
         try:
             user = serializer.save()
             return Response({
-                'message': '註冊成功',
+                'message': 'Registration successful',
                 'user_id': user.id,
                 'username': user.username,
                 'email': user.email
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return self.get_error_response(f'註冊失敗: {str(e)}')
+            return self.get_error_response(f'Registration failed: {str(e)}')
 
 class UpdateProfileView(AuthBaseView, generics.UpdateAPIView):
     """
-    更新用戶資料視圖
+    Update Profile View
     
-    允許已登入用戶更新其個人資料：
+    Allows authenticated users to update their profile:
     - username
     - email
     - first_name
@@ -86,23 +87,23 @@ class UpdateProfileView(AuthBaseView, generics.UpdateAPIView):
         try:
             user = serializer.save()
             return Response({
-                'message': '資料更新成功',
+                'message': 'Profile updated successfully',
                 'username': user.username,
                 'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name
             })
         except Exception as e:
-            return self.get_error_response(f'更新失敗: {str(e)}')
+            return self.get_error_response(f'Update failed: {str(e)}')
 
 class ChangePasswordView(AuthBaseView, generics.UpdateAPIView):
     """
-    更改密碼視圖
+    Change Password View
     
-    允許已登入用戶更改密碼，需提供：
+    Allows authenticated users to change their password by providing:
     - old_password
-    - password (新密碼)
-    - password2 (確認新密碼)
+    - password (new password)
+    - password2 (confirm new password)
     """
     permission_classes = (IsAuthenticated,)
     serializer_class = ChangePasswordSerializer
@@ -120,7 +121,31 @@ class ChangePasswordView(AuthBaseView, generics.UpdateAPIView):
         try:
             serializer.save()
             return Response({
-                'message': '密碼更改成功'
+                'message': 'Password changed successfully'
             })
         except Exception as e:
-            return self.get_error_response(f'密碼更改失敗: {str(e)}')
+            return self.get_error_response(f'Password change failed: {str(e)}')
+
+class LogoutView(AuthBaseView, generics.GenericAPIView):
+    """
+    Logout View
+    
+    Allows authenticated users to logout by blacklisting their refresh token.
+    Requires:
+    - refresh token in request body
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh")
+            if not refresh_token:
+                return self.get_error_response("Refresh token is required")
+                
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({
+                "message": "Logged out successfully"
+            })
+        except Exception as e:
+            return self.get_error_response(f"Logout failed: {str(e)}")
