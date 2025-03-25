@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 
+
 class UpdateUserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
 
@@ -19,20 +20,20 @@ class UpdateUserSerializer(serializers.ModelSerializer):
     def validate_email(self, value):
         user = self.context["request"].user
         if User.objects.exclude(pk=user.pk).filter(email=value).exists():
-            raise serializers.ValidationError({"email": "這個電子郵件已經存在了"})
+            raise serializers.ValidationError({"email": "This email address is already in use"})
         return value
 
     def validate_username(self, value):
         user = self.context["request"].user
         if User.objects.exclude(pk=user.pk).filter(username=value).exists():
-            raise serializers.ValidationError({"username": "這個使用者名稱已經存在了"})
+            raise serializers.ValidationError({"username": "This username is already in use"})
         return value
 
     def update(self, instance, validated_data):
         user = self.context["request"].user
 
         if user.pk != instance.pk:
-            raise serializers.ValidationError({"authorize": "你沒有這個使用者的權限"})
+            raise serializers.ValidationError({"authorize": "You don't have permission for this user"})
 
         instance.first_name = validated_data["first_name"]
         instance.last_name = validated_data["last_name"]
@@ -57,20 +58,20 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password2"]:
-            raise serializers.ValidationError({"password": "您輸入的密碼不相同"})
+            raise serializers.ValidationError({"password": "The passwords do not match"})
 
         return attrs
 
     def validate_old_password(self, value):
         user = self.context["request"].user
         if not user.check_password(value):
-            raise serializers.ValidationError({"old_password": "您輸入的密碼不正確"})
+            raise serializers.ValidationError({"old_password": "The old password is incorrect"})
         return value
 
     def update(self, instance, validated_data):
         user = self.context["request"].user
         if user.pk != instance.pk:
-            raise serializers.ValidationError({"authorize": "你沒有這個使用者的權限"})
+            raise serializers.ValidationError({"authorize": "You don't have permission for this user"})
 
         instance.set_password(validated_data["password"])
         instance.save()
@@ -80,9 +81,9 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
-        required=True, validators=[UniqueValidator(queryset=User.objects.all())]
+        required=True, 
+        validators=[UniqueValidator(queryset=User.objects.all())]
     )
-
     password = serializers.CharField(
         write_only=True, required=True, validators=[validate_password]
     )
@@ -105,7 +106,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password2"]:
-            raise serializers.ValidationError({"password": "您輸入的密碼不相同"})
+            raise serializers.ValidationError({"password": "The passwords do not match"})
 
         return attrs
 
