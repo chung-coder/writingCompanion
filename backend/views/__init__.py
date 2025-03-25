@@ -1,4 +1,4 @@
-# 認證相關視圖
+# Authentication related views
 from .auth import (
     MyObtainTokenPairView,
     RegisterView,
@@ -6,33 +6,33 @@ from .auth import (
     UpdateProfileView
 )
 
-# 日記相關視圖
+# Diary related views
 from .diary import (
     DiaryViewSet,
     ListWeeklyDiaryView
 )
 
-# GPT 相關視圖
+# GPT related views
 from .genAI import (
-    GptinteractionViewSet,
-    GptassistanceViewSet,
-    GptInteractionView,
-    GptAssistanceView
+    InteractionViewSet,
+    AssistanceViewSet,
+    InteractionView,
+    AssistanceView
 )
 
-# 學生相關視圖
+# Student related views
 from .student import (
     ListStudentInfoView,
     StudentViewSet
 )
 
-# 班級相關視圖
+# Class related views
 from .class_management import ClassViewSet
 
-# 教師相關視圖
+# Teacher related views
 from .teacher import TeacherViewSet
 
-# 統計相關視圖
+# Statistics related views
 from .statistics import (
     WordCountStatistics,
     CountInteractionView,
@@ -40,34 +40,34 @@ from .statistics import (
 )
 
 __all__ = [
-    # 認證相關
+    # Authentication related
     'MyObtainTokenPairView',
     'RegisterView',
     'ChangePasswordView',
     'UpdateProfileView',
     
-    # 日記相關
+    # Diary related
     'DiaryViewSet',
     'ListWeeklyDiaryView',
     'ListFavoriteDiaryView',
     
-    # GPT 相關
+    # GPT related
     'GptinteractionViewSet',
     'GptassistanceViewSet',
     'gpt_interaction_view',
     'gpt_assistance_view',
     
-    # 學生相關
+    # Student related
     'ListStudentInfoView',
     'StudentViewSet',
     
-    # 班級相關
+    # Class related
     'ClassViewSet',
     
-    # 教師相關
+    # Teacher related
     'TeacherViewSet',
     
-    # 統計相關
+    # Statistics related
     'WordCountStatistics',
     'CountInteractionView'
 ]
