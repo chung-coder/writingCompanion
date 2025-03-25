@@ -1,22 +1,29 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from ..models import Class
+from ..models import Class, Student
 from ..serializers import ClassSerializer
 
 class ClassViewSet(viewsets.ModelViewSet):
     """
-    班級資料的 ViewSet
+    Class Data ViewSet
     
-    提供班級資料的 CRUD 操作
+    Basic CRUD operations for class data:
+    - List all classes (teacher) or own class (student)
+    - Get class details
+    - Create class (teacher only)
+    - Update class (teacher only)
+    - Delete class (teacher only)
     """
     queryset = Class.objects.all()
     serializer_class = ClassSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """根據用戶權限返回班級資料"""
-        if self.request.user.is_staff:
+        """Return class data based on user permissions"""
+        # Teachers can see all classes
+        if hasattr(self.request.user, 'teacher'):
             return Class.objects.all()
-        return Class.objects.filter(
-            student__user=self.request.user
-        ).distinct()
+        
+        # Students can only see their own class
+        student = Student.objects.get(user=self.request.user)
+        return Class.objects.filter(id=student.class_field_id)

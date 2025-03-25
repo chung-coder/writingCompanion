@@ -1,19 +1,22 @@
-from rest_framework import viewsets, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import viewsets, status
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse, JsonResponse
+from rest_framework.views import APIView
 from django.conf import settings
 from ..models import Gptinteraction, Gptassistance
 from ..serializers import GptinteractionSerializer, GptassistanceSerializer
+from ..permissions import IsStudent
 import openai
 import json
+from datetime import datetime
 
 openai.api_key = settings.OPENAI_API_KEY
 
 class GPTConfig:
-    MODEL = "gpt-4o"
-
+    """GPT Configuration and Utility Class"""
+    
+    MODEL = "gpt-4"
+    
     INTERACTION_SYSTEM_CONTENT = """
     你只用繁體中文回覆我的問題，並請將回答的內容控制在 200 字以內。你是一位擁有豐富寫作經驗且熱於助人的寫作教練，
     我是國小三年級的學生，請根據你的專業來協助我撰寫日常札記，我們採用一問一答的方式進行互動。
@@ -51,142 +54,166 @@ class GPTConfig:
     """
 
     @staticmethod
-    def create_user_content(title, date, mood, target, diary_content):
-        return (
-            f"關於我的日記，標題是「{title}」，"
-            f"撰寫日期是「{date}」，"
-            f"我今天的心情「{mood}」，"
-            f"且這篇日記是紀錄給「{target}」，"
-            f"目前撰寫的作文內容：\n{diary_content}"
-        )
-    
-    @staticmethod
-    def validate_request_data(title, date, mood, target, diary_content):
-        required_fields = {
-            'title': title,
-            'date': date,
-            'mood': mood,
-            'target': target,
-            'diary_content': diary_content
-        }
-    
-        missing_fields = [field for field, value in required_fields.items() if not value]
+    def validate_request_data(data):
+        """Validate required fields in request data"""
+        required_fields = ['title', 'date', 'mood', 'target', 'diary_content']
+        missing_fields = [field for field in required_fields if not data.get(field)]
         
         if missing_fields:
-            return JsonResponse({
-                'error': f'Missing required fields: {", ".join(missing_fields)}'
-            }, status=400)
+            return f'Missing required fields: {", ".join(missing_fields)}'
         return None
 
-
-class GptinteractionViewSet(viewsets.ModelViewSet):
-    """
-    GPT Interaction ViewSet
-    """
-    queryset = Gptinteraction.objects.all()
-    serializer_class = GptinteractionSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class GptassistanceViewSet(viewsets.ModelViewSet):
-    """
-    GPT Assistance ViewSet
-    """
-    queryset = Gptassistance.objects.all()
-    serializer_class = GptassistanceSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def GptInteractionView(request):
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
-
-    validation_error = GPTConfig.validate_request_data(data)
-
-    if validation_error:
-        return validation_error
-
-    try:
-        messages = [{"role": "system", "content": GPTConfig.INTERACTION_SYSTEM_CONTENT}]
-
-        user_content = GPTConfig.create_user_content(data)
-        if data.get('messages'):
-            messages.extend(data['messages'])
-        else:
-            messages.append({"role": "user", "content": user_content})
-
-        response = openai.chat.completions.create(
-            model=MODEL,
-            messages=gpt_messages,
-        )
-        
-        Gptinteraction.objects.create(
-            user=request.user,
-            diary_id=data.get('diary_id'),
-            interaction_time=data.get('date'),
-            dialogue_record=json.dumps(messages + [{'role': 'assistant', 'content': response.choices[0].message.content}])
+    @staticmethod
+    def format_diary_content(data):
+        """Format diary content for GPT input"""
+        return (
+            f"關於我的日記，標題是「{data.get('title')}」，"
+            f"撰寫日期是「{data.get('date')}」，"
+            f"我今天的心情「{data.get('mood')}」，"
+            f"且這篇日記是紀錄給「{data.get('target')}」，"
+            f"目前撰寫的作文內容：\n{data.get('diary_content')}"
         )
 
-        return Response({'response': response.choices[0].message.content})
-    except openai.error.OpenAIError as e:
-        return Response({
-            'error': f'OpenAI API error: {str(e)}'
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-    except Exception as e:
-        return Response({
-            'error': f'Unexpected error: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def GptAssistanceView(request):
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
-
-    validation_error = GPTConfig.validate_request_data(data)
-    if validation_error:
-        return validation_error
+class BaseGPTView(APIView):
+    """Base class for GPT-related views"""
     
-    if not data.get('problem'):
-        return JsonResponse({'error': 'Missing problem description'}, status=400)
+    permission_classes = [IsAuthenticated, IsStudent]
+    
+    def handle_gpt_request(self, messages):
+        """Handle GPT API request with error handling"""
+        try:
+            response = openai.chat.completions.create(
+                model=GPTConfig.MODEL,
+                messages=messages
+            )
+            return response.choices[0].message.content
+        except openai.APIError as e:
+            raise Exception(f'OpenAI API error: {str(e)}')
 
-    try:
-        user_content = (
-            f"{GPTConfig.create_user_content(data)}\n"
-            f"這是我目前遇到的問題：\n{data['problem']}"
-        )
+    def validate_and_process_request(self, request):
+        """Validate request data and prepare for processing"""
+        try:
+            data = request.data
+            error = GPTConfig.validate_request_data(data)
+            if error:
+                return Response({'error': error}, status=status.HTTP_400_BAD_REQUEST)
+            return data
+        except Exception as e:
+            return Response(
+                {'error': f'Invalid request data: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        response = openai.chat.completions.create(
-            model=GPTConfig.MODEL,
-            messages=[
+class InteractionView(BaseGPTView):
+    """View for handling writing interaction with GPT"""
+
+    def post(self, request):
+        data = self.validate_and_process_request(request)
+        if isinstance(data, Response):
+            return data
+
+        try:
+            # Prepare messages for GPT
+            messages = [
+                {"role": "system", "content": GPTConfig.INTERACTION_SYSTEM_CONTENT}
+            ]
+
+            if data.get('messages'):
+                messages.extend(data['messages'])
+            else:
+                messages.append({
+                    "role": "user",
+                    "content": GPTConfig.format_diary_content(data)
+                })
+
+            # Get GPT response
+            gpt_response = self.handle_gpt_request(messages)
+
+            # Save interaction record
+            Gptinteraction.objects.create(
+                user=request.user,
+                diary_id=data.get('diary_id'),
+                interaction_time=data.get('date', datetime.now()),
+                dialogue_record=json.dumps(messages + [
+                    {'role': 'assistant', 'content': gpt_response}
+                ])
+            )
+
+            return Response({'response': gpt_response})
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class AssistanceView(BaseGPTView):
+    """View for handling writing assistance with GPT"""
+
+    def post(self, request):
+        data = self.validate_and_process_request(request)
+        if isinstance(data, Response):
+            return data
+
+        try:
+            if not data.get('problem'):
+                return Response(
+                    {'error': 'Missing problem description'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Prepare content for GPT
+            user_content = (
+                f"{GPTConfig.format_diary_content(data)}\n"
+                f"這是我目前遇到的問題：\n{data['problem']}"
+            )
+
+            # Get GPT response
+            messages = [
                 {'role': 'system', 'content': GPTConfig.ASSISTANCE_SYSTEM_CONTENT},
                 {'role': 'user', 'content': user_content}
             ]
-        )
+            gpt_response = self.handle_gpt_request(messages)
 
-        Gptassistance.objects.create(
-            user=request.user,
-            diary_id=data.get('diary_id'),
-            interaction_time=data.get('date'),
-            user_input=data['problem'],
-            gpt_response=response.choices[0].message.content
-        )
+            # Save assistance record
+            Gptassistance.objects.create(
+                user=request.user,
+                diary_id=data.get('diary_id'),
+                interaction_time=data.get('date', datetime.now()),
+                user_input=data['problem'],
+                gpt_response=gpt_response
+            )
 
-        return Response({
-            'response': response.choices[0].message.content
-        })
+            return Response({'response': gpt_response})
 
-    except openai.error.OpenAIError as e:
-        return Response({
-            'error': f'OpenAI API error: {str(e)}'
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-    except Exception as e:
-        return Response({
-            'error': f'Unexpected error: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class InteractionViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing GPT interaction records"""
+    
+    serializer_class = GptinteractionSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+    queryset = Gptinteraction.objects.all()
+
+    def get_queryset(self):
+        """Return interactions for current student"""
+        return Gptinteraction.objects.filter(
+            student=self.request.user.student
+        ).order_by('-interaction_time')
+
+class AssistanceViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing GPT assistance records"""
+    
+    serializer_class = GptassistanceSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+    queryset = Gptassistance.objects.all()
+
+    def get_queryset(self):
+        """Return assistance records for current student"""
+        return Gptassistance.objects.filter(
+            student=self.request.user.student
+        ).order_by('-interaction_time')

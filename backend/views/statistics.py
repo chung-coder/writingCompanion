@@ -3,50 +3,28 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status, generics
 from django.db.models import Count, Case, When, IntegerField, Sum
-from django.contrib.auth.models import User
+from ..permissions import IsStudent
 from datetime import datetime
 from ..models import Student, Diary
 from ..serializers import DiarySerializer
 
-class StatisticsBaseView(APIView):
-    """統計相關視圖的基礎類"""
-    permission_classes = (IsAuthenticated,)
-
-    def get_student_id(self):
-        """獲取當前用戶對應的學生ID"""
-        try:
-            return Student.objects.filter(
-                user_id=self.request.user.id
-            ).values_list('id', flat=True)[0]
-        except IndexError:
-            return None
-
-    def handle_no_student_error(self):
-        """處理找不到學生資料的錯誤"""
-        return Response(
-            {'error': '找不到學生資料'},
-            status=status.HTTP_404_NOT_FOUND
-        )
-
-class WordCountStatistics(StatisticsBaseView):
+class WordCountStatistics(APIView):
     """
-    字數統計視圖
+    Word Count Statistics View
     
-    返回指定年份每月的總字數統計
+    Returns total word count statistics for each month of the specified year
     """
-    def get(self, request, *args, **kwargs):
-        student_id = self.get_student_id()
-        if not student_id:
-            return self.handle_no_student_error()
+    permission_classes = (IsAuthenticated, IsStudent)
 
+    def get(self, request, *args, **kwargs):
         try:
-            # 獲取查詢參數中的年份，默認為當前年份
+            # Get year from query parameters, default to current year
             year = request.query_params.get("year", datetime.now().year)
             
-            # 查詢該年度每月的字數統計
+            # Query word count statistics for each month of the year
             word_count_data = (
                 Diary.objects.filter(
-                    student_id=student_id,
+                    student=request.user.student,
                     date__year=year
                 )
                 .values("date__month")
@@ -54,13 +32,13 @@ class WordCountStatistics(StatisticsBaseView):
                 .order_by("date__month")
             )
 
-            # 轉換為字典格式
+            # Convert to dictionary format
             result = {
                 month["date__month"]: month["total_word_count"] 
                 for month in word_count_data
             }
 
-            # 補充缺失的月份數據
+            # Fill in missing months with zero values
             for month in range(1, 13):
                 if month not in result:
                     result[month] = 0
@@ -72,31 +50,29 @@ class WordCountStatistics(StatisticsBaseView):
 
         except Exception as e:
             return Response(
-                {'error': f'獲取字數統計失敗: {str(e)}'},
+                {'error': f'Failed to get word count statistics: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-class CountInteractionView(StatisticsBaseView):
+class CountInteractionView(APIView):
     """
-    互動統計視圖
+    Interaction Statistics View
     
-    返回：
-    1. 互動日記數量
-    2. 協助日記數量
-    3. 總日記數量
-    4. 目標讀者統計
-    5. 心情統計
+    Returns:
+    1. Number of interaction diaries
+    2. Number of assistance diaries
+    3. Total number of diaries
+    4. Target reader statistics
+    5. Mood statistics
     """
+    permission_classes = (IsAuthenticated, IsStudent)
+
     def get(self, request, *args, **kwargs):
-        student_id = self.get_student_id()
-        if not student_id:
-            return self.handle_no_student_error()
-
         try:
-            # 獲取基本查詢集
-            student_diaries = Diary.objects.filter(student_id=student_id)
+            # Get base queryset using user.student
+            student_diaries = Diary.objects.filter(student=request.user.student)
 
-            # 計算不同類型的日記數量
+            # Calculate counts for different diary types
             interaction_count = student_diaries.filter(
                 diary_type="Interaction"
             ).count()
@@ -105,7 +81,7 @@ class CountInteractionView(StatisticsBaseView):
             ).count()
             total_count = interaction_count + assistance_count
 
-            # 統計目標讀者分布
+            # Calculate target reader distribution
             target_counts = student_diaries.aggregate(
                 self_count=Count(
                     Case(When(target="自己", then=1), output_field=IntegerField())
@@ -121,7 +97,7 @@ class CountInteractionView(StatisticsBaseView):
                 ),
             )
 
-            # 統計心情分布
+            # Calculate mood distribution
             mood_counts = student_diaries.aggregate(
                 very_good=Count(
                     Case(When(mood="很好", then=1), output_field=IntegerField())
@@ -150,51 +126,33 @@ class CountInteractionView(StatisticsBaseView):
 
         except Exception as e:
             return Response(
-                {'error': f'獲取統計資料失敗: {str(e)}'},
+                {'error': f'Failed to get interaction statistics: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 class ListFavoriteDiaryView(generics.ListAPIView):
     """
-    收藏日記列表視圖
+    Favorite Diary List View
     
-    返回當前用戶收藏的所有日記
+    Returns all diaries favorited by the current user
     """
     serializer_class = DiarySerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsStudent)
 
     def get_queryset(self):
-        """
-        獲取用戶收藏的日記清單
-        
-        Returns:
-            QuerySet: 收藏的日記查詢集
-        
-        Raises:
-            Http404: 當找不到學生資料時
-        """
-        try:
-            student_id = Student.objects.filter(
-                user_id=self.request.user.id
-            ).values_list('id', flat=True)[0]
-            
-            return Diary.objects.filter(
-                student_id=student_id,
-                is_favorite=True
-            ).order_by('-date')  # 按日期降序排序
-            
-        except IndexError:
-            return Diary.objects.none()  # 返回空查詢集
+        """Get user's favorite diary list"""
+        return Diary.objects.filter(
+            student=self.request.user.student,
+            is_favorite=True
+        ).order_by('-date')  # Sort by date in descending order
     
     def list(self, request, *args, **kwargs):
-        """
-        重寫list方法以添加錯誤處理
-        """
+        """Override list method to add error handling"""
         try:
             queryset = self.get_queryset()
             if not queryset.exists():
                 return Response(
-                    {'message': '沒有找到收藏的日記'},
+                    {'message': 'No favorite diaries found'},
                     status=status.HTTP_200_OK
                 )
             
@@ -203,6 +161,6 @@ class ListFavoriteDiaryView(generics.ListAPIView):
             
         except Exception as e:
             return Response(
-                {'error': f'獲取收藏日記失敗: {str(e)}'},
+                {'error': f'Failed to get favorite diaries: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

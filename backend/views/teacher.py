@@ -5,18 +5,21 @@ from ..serializers import TeacherSerializer
 
 class TeacherViewSet(viewsets.ModelViewSet):
     """
-    教師資料的 ViewSet
+    Teacher Data ViewSet
     
-    提供教師資料的 CRUD 操作
+    Permissions:
+    - Teachers: can view/update their own data
+    - Students: can view their teachers' data
     """
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """根據用戶權限返回教師資料"""
-        if self.request.user.is_staff:
-            return Teacher.objects.all()
-        return Teacher.objects.filter(
-            student__user=self.request.user
-        ).distinct()
+        """Return teacher data based on user role"""
+        user = self.request.user
+        if hasattr(user, 'teacher'):
+            return Teacher.objects.filter(id=user.teacher.id)
+        if hasattr(user, 'student'):
+            return Teacher.objects.filter(students=user.student)
+        return Teacher.objects.none()
