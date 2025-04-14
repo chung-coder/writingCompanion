@@ -5,6 +5,8 @@ from datetime import datetime
 from ..models import Diary, Student
 from ..serializers import DiarySerializer
 from ..permissions import IsTeacherOrOwner
+from rest_framework.exceptions import PermissionDenied
+from django.core.exceptions import ValidationError
 
 class DiaryViewSet(viewsets.ModelViewSet):
     """
@@ -22,10 +24,42 @@ class DiaryViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsTeacherOrOwner]
 
     def get_queryset(self):
-        """Return diary entries based on user permissions"""
-        if hasattr(self.request.user, 'teacher'):
-            return Diary.objects.filter(student__teacher=self.request.user.teacher)
-        return Diary.objects.filter(student__user=self.request.user)
+        """
+        Return diary entries based on user permissions.
+        
+        Returns:
+            QuerySet: Filtered diary entries based on user role
+        """
+        user = self.request.user
+        try:
+            if hasattr(user, 'teacher'):
+                return Diary.objects.filter(student__teacher=user.teacher)
+            elif hasattr(user, 'student'):
+                return Diary.objects.filter(student__user=user)
+            else:
+                return Diary.objects.none()
+        except Exception as e:
+            raise ValidationError(f"Failed to retrieve diaries: {str(e)}")
+
+    def perform_create(self, serializer):
+        """
+        Automatically set the student when creating a diary.
+        
+        This method is called by the CreateModelMixin when saving the diary instance.
+        It ensures that the diary is associated with the currently authenticated student.
+        
+        Raises:
+            PermissionDenied: If the user is not a student
+            ValidationError: If there are issues with the student association
+        """
+        user = self.request.user
+        if not hasattr(user, 'student'):
+            raise PermissionDenied("User is not associated with a student profile")
+            
+        try:
+            serializer.save(student=user.student)
+        except ValidationError as e:
+            raise ValidationError(f"Failed to create diary: {str(e)}")
 
 class ListWeeklyDiaryView(generics.ListAPIView):
     """
