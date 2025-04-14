@@ -7,6 +7,7 @@ from ..serializers import DiarySerializer
 from ..permissions import IsTeacherOrOwner
 from rest_framework.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
+import re
 
 class DiaryViewSet(viewsets.ModelViewSet):
     """
@@ -44,6 +45,7 @@ class DiaryViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """
         Automatically set the student when creating a diary.
+        Calculate and save the word count of the diary content.
         
         This method is called by the CreateModelMixin when saving the diary instance.
         It ensures that the diary is associated with the currently authenticated student.
@@ -57,7 +59,24 @@ class DiaryViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("User is not associated with a student profile")
             
         try:
-            serializer.save(student=user.student)
+            # Get the diary data
+            diary_data = serializer.validated_data
+            content = diary_data.get('content', '')
+            
+            # Define a regular expression pattern for Chinese characters and punctuation
+            chinese_pattern = r'[\u4e00-\u9fff\u3000-\u303F\uff00-\uffef.,!?]'
+
+            # Use re.findall to find all Chinese characters and punctuation in the text
+            chinese_elements = re.findall(chinese_pattern, content)
+
+            # Return the count of Chinese characters and punctuation
+            word_count = len(chinese_elements)
+            
+            # Add word count to the data
+            diary_data['word_count'] = word_count
+            
+            # Save the diary with word count
+            serializer.save(student=user.student, **diary_data)
         except ValidationError as e:
             raise ValidationError(f"Failed to create diary: {str(e)}")
 

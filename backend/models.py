@@ -158,6 +158,12 @@ class Diary(models.Model):
     class Meta:
         db_table = "Diary"
 
+    def save(self, *args, **kwargs):
+        """
+        Override save method to perform any necessary operations before saving.
+        """
+        super().save(*args, **kwargs)
+
 
 class Gptassistance(models.Model):
     """
